@@ -54,55 +54,61 @@ print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_pri))
 
 
 # ---------------- ADD GRAPH CODE HERE ----------------
-# import matplotlib.pyplot as plt
-# import seaborn as sns
+# ---------------- CONFUSION MATRIX VISUALIZATION ----------------
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from sklearn.metrics import confusion_matrix
 
-# # PLOT RESULTS FOR CATEGORY CLASSIFICATION
-# category_metrics = {
-#     'Accuracy': accuracy_score(y_test, y_pred_cat),
-#     'Precision': precision_score(y_test, y_pred_cat, average='weighted'),
-#     'Recall': recall_score(y_test, y_pred_cat, average='weighted'),
-#     'F1-Score': f1_score(y_test, y_pred_cat, average='weighted')
-# }
+def plot_confusion_matrix(y_true, y_pred, title, filename, cmap):
+    """
+    Plots confusion matrix with both counts and percentages.
+    Also prints it in console neatly.
+    """
+    cm = confusion_matrix(y_true, y_pred)
+    row_sums = cm.sum(axis=1, keepdims=True)
+    row_sums[row_sums == 0] = 1  # prevent divide-by-zero
+    cm_norm = cm.astype(float) / row_sums
 
-# plt.figure(figsize=(6, 4))
-# plt.bar(category_metrics.keys(), category_metrics.values())
-# plt.title("Category Classification Metrics")
-# plt.ylabel("Score")
-# plt.ylim(0, 1)
-# plt.grid(axis='y', linestyle='--', alpha=0.7)
-# plt.show()
+    # Combine counts and percentages into one label per cell
+    labels = np.array([
+        [f"{cm[i, j]}\n({cm_norm[i, j]*100:.1f}%)" for j in range(cm.shape[1])]
+        for i in range(cm.shape[0])
+    ])
 
-# plt.figure(figsize=(6, 5))
-# sns.heatmap(confusion_matrix(y_test, y_pred_cat), annot=True, cmap='Blues', fmt='d')
-# plt.title("Category Classification Confusion Matrix")
-# plt.xlabel("Predicted Labels")
-# plt.ylabel("True Labels")
-# plt.show()
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cm, annot=labels, fmt='', cmap=cmap, cbar=False,
+                xticklabels=np.unique(y_true), yticklabels=np.unique(y_true))
+    plt.title(title, fontsize=14, weight='bold')
+    plt.xlabel("Predicted Labels", fontsize=12)
+    plt.ylabel("Actual Labels", fontsize=12)
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.close()
+
+    # Print matrix neatly in console
+    print(f"\n{title}")
+    print("-" * len(title))
+    print(cm)
+    print()
 
 
-# # PLOT RESULTS FOR PRIORITY CLASSIFICATION
-# priority_metrics = {
-#     'Accuracy': accuracy_score(y_test, y_pred_pri),
-#     'Precision': precision_score(y_test, y_pred_pri, average='weighted'),
-#     'Recall': recall_score(y_test, y_pred_pri, average='weighted'),
-#     'F1-Score': f1_score(y_test, y_pred_pri, average='weighted')
-# }
+# === CATEGORY CLASSIFICATION CONFUSION MATRIX ===
+plot_confusion_matrix(
+    y_test, y_pred_cat,
+    title="Confusion Matrix - Category (Counts + %)",
+    filename="cm_category_detailed.png",
+    cmap="Blues"
+)
 
-# plt.figure(figsize=(6, 4))
-# plt.bar(priority_metrics.keys(), priority_metrics.values(), color='orange')
-# plt.title("Priority Classification Metrics")
-# plt.ylabel("Score")
-# plt.ylim(0, 1)
-# plt.grid(axis='y', linestyle='--', alpha=0.7)
-# plt.show()
+# === PRIORITY CLASSIFICATION CONFUSION MATRIX ===
+plot_confusion_matrix(
+    y_test, y_pred_pri,
+    title="Confusion Matrix - Priority (Counts + %)",
+    filename="cm_priority_detailed.png",
+    cmap="Oranges"
+)
 
-# plt.figure(figsize=(6, 5))
-# sns.heatmap(confusion_matrix(y_test, y_pred_pri), annot=True, cmap='Oranges', fmt='d')
-# plt.title("Priority Classification Confusion Matrix")
-# plt.xlabel("Predicted Labels")
-# plt.ylabel("True Labels")
-# plt.show()
 
 # --- 3. DUPLICATE DETECTION ---
 vectorizer_dup = TfidfVectorizer(max_features=2000, stop_words='english')
